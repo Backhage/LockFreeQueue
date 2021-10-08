@@ -1,4 +1,7 @@
-/* A queue that is thread safe without using a mutex */
+/** 
+ * A queue that is thread safe without using a mutex. Uses a fixed size array
+ * to hold the elements.
+ */
 #pragma once
 
 #include <atomic>
@@ -46,16 +49,14 @@ public:
     LockFreeQueue& operator=(const LockFreeQueue&) = delete;
 
     /** 
-     * Puts a new element into the queue. 
+     * Tries to insert a new element at the end of the queue. 
      * Input: Constructor arguments for the new element to place in queue
-     * Return: true if element was successfully placed in queue, otherwise
-     *         false.
+     * Return: true if element was successfully inserted, otherwise false.
     */
     template<typename... ArgTs>
-    bool tryPut(ArgTs&&... args) {
+    bool tryPush(ArgTs&&... args) {
         Indices currentIndices = m_indices;
         auto nextWriteIndex{ nextIndex(currentIndices.writeIndex) };
-
         if (nextWriteIndex == currentIndices.readIndex) {
             return false;
         }
@@ -70,7 +71,7 @@ public:
     }
 
     /** 
-     * Removes and returns the element at the front of the queue.  
+     * Tries to remove and return the element at the front of the queue.  
      * Return: The element wrapped in std::optional if sucessful, otherwise
      *         std::nullopt
      */

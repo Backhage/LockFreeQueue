@@ -4,7 +4,7 @@
 TEST(LockFreeQueueTest, PushAndPop) {
   LockFreeQueue<int, 1> q;
   constexpr int expected = 1;
-  ASSERT_TRUE(q.tryPut(expected));
+  ASSERT_TRUE(q.tryPush(expected));
 
   auto actual = q.tryPop();
   ASSERT_TRUE(actual.has_value());
@@ -30,8 +30,8 @@ TEST(LockFreeQueue, MemLeakCheck) {
   };
 
   LockFreeQueue<RAII, 2> q;
-  ASSERT_TRUE(q.tryPut());
-  ASSERT_TRUE(q.tryPut());
+  ASSERT_TRUE(q.tryPush());
+  ASSERT_TRUE(q.tryPush());
 
   auto fst = q.tryPop();
   ASSERT_TRUE(fst.has_value());
