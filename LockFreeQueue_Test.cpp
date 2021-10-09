@@ -1,4 +1,6 @@
 #include <gtest/gtest.h>
+#include <vector>
+
 #include "LockFreeQueue.hpp"
 
 TEST(LockFreeQueueTest, PushAndPop) {
@@ -9,6 +11,18 @@ TEST(LockFreeQueueTest, PushAndPop) {
   auto actual = q.tryPop();
   ASSERT_TRUE(actual.has_value());
   ASSERT_EQ(*actual, expected);
+}
+
+TEST(LockFreeQueueTest, ConstructorArgs) {
+  LockFreeQueue<std::vector<int>, 1> q;
+  ASSERT_TRUE(q.tryPush(1, 2, 3, 4, 5));
+
+  auto actual = q.tryPop();
+  ASSERT_TRUE(actual.has_value());
+  ASSERT_EQ(actual->size(), 5);
+  for (auto i = 0; i < actual->size(); i++) {
+    ASSERT_EQ(actual->at(i), i+1);
+  }
 }
 
 TEST(LockFreeQueue, MemLeakCheck) {

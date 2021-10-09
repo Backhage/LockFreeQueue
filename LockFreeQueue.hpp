@@ -36,7 +36,7 @@ class LockFreeQueue {
 public:
     LockFreeQueue() = default;
     ~LockFreeQueue() {
-        Indices currentIndices = m_indices ;
+        Indices currentIndices = m_indices;
         while (currentIndices.readIndex != currentIndices.writeIndex) {
             if (m_occupied[currentIndices.readIndex]) {
                 getElemByIndex(currentIndices.readIndex)->~Elem();
