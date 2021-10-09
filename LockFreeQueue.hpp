@@ -85,8 +85,8 @@ public:
         if (!m_indices.compare_exchange_strong(currentIndices, {nextReadIndex, currentIndices.writeIndex})) {
             return std::nullopt;
         }
-        static_assert(std::is_copy_constructible_v<Elem>);
-        Elem elem{ *getElemByIndex(currentIndices.readIndex) };
+        static_assert(std::is_move_constructible_v<Elem>);
+        Elem elem{ std::move(*getElemByIndex(currentIndices.readIndex)) };
         static_assert(std::is_nothrow_destructible_v<Elem>);
         getElemByIndex(currentIndices.readIndex)->~Elem();
         m_occupied[currentIndices.readIndex] = false;

@@ -24,14 +24,17 @@ TEST(LockFreeQueue, MemLeakCheck) {
       delete [] m_data;
     }
 
-    RAII(const RAII& other) : m_data{ new int[m_size] } {
-      // Don't care about deep copy of data.
+    RAII(RAII&& other) {
+      m_data = other.m_data;
+      other.m_data = nullptr;
     }
   };
 
-  LockFreeQueue<RAII, 2> q;
-  ASSERT_TRUE(q.tryPush());
-  ASSERT_TRUE(q.tryPush());
+  const int maxSize = 10;
+  LockFreeQueue<RAII, maxSize> q;
+  for (auto i = 0; i < maxSize-1; i++) {
+    ASSERT_TRUE(q.tryPush());
+  }
 
   auto fst = q.tryPop();
   ASSERT_TRUE(fst.has_value());
