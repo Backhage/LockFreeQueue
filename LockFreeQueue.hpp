@@ -25,7 +25,7 @@ class LockFreeQueue {
     }
 
     using Elem = ElemT;
-    Elem* getElemByIndex(Index index) {
+    inline Elem* getElemByIndex(Index index) {
         return reinterpret_cast<Elem*>(&m_buffer[index]);
     }
 
@@ -57,7 +57,7 @@ public:
     bool tryPush(ArgTs&&... args) {
         Indices currentIndices = m_indices;
         auto nextWriteIndex{ nextIndex(currentIndices.writeIndex) };
-        if (nextWriteIndex == currentIndices.readIndex) {
+        if (nextWriteIndex == currentIndices.readIndex || m_occupied[nextWriteIndex]) {
             return false;
         }
 
@@ -67,6 +67,7 @@ public:
 
         new(&m_buffer[currentIndices.writeIndex]) Elem{std::forward<ArgTs>(args)...};
         m_occupied[currentIndices.writeIndex] = true;
+
         return true;
     }
 
@@ -77,19 +78,23 @@ public:
      */
     std::optional<Elem> tryPop() {
         Indices currentIndices = m_indices;
-        if (currentIndices.readIndex == currentIndices.writeIndex) {
+        if (currentIndices.readIndex == currentIndices.writeIndex || !m_occupied[currentIndices.readIndex]) {
             return std::nullopt;
         }
 
         auto nextReadIndex{ nextIndex(currentIndices.readIndex) };
-        if (!m_indices.compare_exchange_strong(currentIndices, {nextReadIndex, currentIndices.writeIndex})) {
+        if (!m_indices.compare_exchange_strong(
+                currentIndices,
+                {nextReadIndex, currentIndices.writeIndex})) {
             return std::nullopt;
         }
+
         static_assert(std::is_move_constructible_v<Elem>);
         Elem elem{ std::move(*getElemByIndex(currentIndices.readIndex)) };
         static_assert(std::is_nothrow_destructible_v<Elem>);
         getElemByIndex(currentIndices.readIndex)->~Elem();
         m_occupied[currentIndices.readIndex] = false;
+
         return elem;
     }
 };
